@@ -12,6 +12,9 @@ raw extractor outputs in `results/outputs/<run>/`.
 | `03_pipeline` | `extract.py` on the new package (same prompt and 100 dpi, status computed in code, nulls enforced) | OpenAI / `gpt-4.1-mini` | **68.8%** | 1/8 | ~$0.001 |
 | `01_prompt` | Iteration 1: per-field prompt rules + date/name normalization in code (same model, same 100 dpi image) | OpenAI / `gpt-4.1-mini` | **95.3%** | 5/8 | ~$0.001 (~2.1k tokens) |
 | `02_input` | Iteration 2: pages rotated upright from the text layer, 150 dpi, up to 3 pages (same prompt, same model) | OpenAI / `gpt-4.1-mini` | **96.9%** | 6/8 | ~$0.002 (~5.2k tokens) |
+| `04_deepseek` | Phase 6 model comparison: same pipeline as `02_input` | OpenRouter / `deepseek/deepseek-v4.1-flash` | **96.9%** | 6/8 | $0.0005 (measured) |
+| `05_gemini` | Phase 6 model comparison: same pipeline as `02_input` | OpenRouter / `google/gemini-2.5-flash` | **81.2%** | 4/8 | $0.0005 (measured) |
+| `06_gpt41mini_or` | Phase 6 model comparison: same pipeline as `02_input` | OpenRouter / `openai/gpt-4.1-mini` | **96.9%** | 6/8 | $0.0017 (measured) |
 
 ## 00_baseline
 
@@ -111,3 +114,20 @@ Same prompt and model as `01_prompt`. Only what the model sees changed (`credent
 Overall 95.3% → **96.9%**, perfect documents 5/8 → 6/8. `tx_01.holder_name` now reads the accent in `LUCÍA`. Input tokens per document went from ~2.1k to ~5.2k (larger image, second page on Texas), cost from ~$0.001 to ~$0.002 per document, latency unchanged (~2 s).
 
 Remaining failures (2 of 64 cells): `ny_01` and `ny_02` `issuing_authority`, as described under `01_prompt`. Left as a known miss on purpose.
+
+## Model comparison (Phase 6)
+
+The pipeline of `02_input` (same prompt, 150 dpi, up to 3 pages, rotation fix) run through OpenRouter with three vision models. Cost is the value OpenRouter returns per request, not an estimate. Total spend for the phase: ~$0.02.
+
+| Model | Overall | Perfect docs | Cost / doc | Avg latency | Input tokens / doc |
+|-------|---------|--------------|------------|-------------|--------------------|
+| `deepseek/deepseek-v4.1-flash` | **96.9%** | 6/8 | $0.0005 | 2.2 s | ~2.0k |
+| `google/gemini-2.5-flash` | 81.2% | 4/8 | $0.0005 | 1.8 s | ~1.0k |
+| `openai/gpt-4.1-mini` | **96.9%** | 6/8 | $0.0017 | 2.8 s | ~3.9k |
+
+- **Gemini 2.5 Flash** is out. It answered `is_credential: false` for `al_01` (a noisy scan of an Alabama registration certificate) and nulled every field: a false negative on a valid credential, the most expensive error for credentialing. It also returned the document title (`REGISTRATION CERTIFICATE`) as `credential_type` on `ny_02`.
+- **DeepSeek V4.1 Flash and GPT-4.1 mini tie** at 96.9% with the same two misses (`issuing_authority` on the New York documents).
+
+**Chosen model: `deepseek/deepseek-v4.1-flash`.** Same accuracy as GPT-4.1 mini at a third of the cost and slightly lower latency. The prompt was iterated entirely against GPT-4.1 mini (OpenAI, development key); DeepSeek matching it without any adjustment suggests the field rules are not tuned to one model. It is also the default the base script shipped with.
+
+Caveat: with 8 documents, a tie is not a strong statistical result. The comparison is enough to exclude Gemini and to justify the cost choice between the other two; the unseen documents MedTrainer runs will be the real test.
