@@ -10,6 +10,7 @@ raw extractor outputs in `results/outputs/<run>/`.
 |-----|--------|------------------|---------|--------------|------------|
 | `00_baseline` | `extract_baseline.py` (original prompt, page 1 at 100 dpi) | OpenAI / `gpt-4.1-mini` | **65.6%** | 0/8 | ~$0.001 (~1.5k tokens) |
 | `03_pipeline` | `extract.py` on the new package (same prompt and 100 dpi, status computed in code, nulls enforced) | OpenAI / `gpt-4.1-mini` | **68.8%** | 1/8 | ~$0.001 |
+| `01_prompt` | Iteration 1: per-field prompt rules + date/name normalization in code (same model, same 100 dpi image) | OpenAI / `gpt-4.1-mini` | **95.3%** | 5/8 | ~$0.001 (~2.1k tokens) |
 
 ## 00_baseline
 
@@ -59,3 +60,30 @@ Changes vs baseline:
 - Everything else fails as before: dates as printed, degree suffixes in names, verbose NY issuer.
 
 A first version of the post-processing raised on non-ISO dates and failed 6 of 8 documents entirely (23.4%). The eval caught it before anything else changed; the rule now degrades to `null` for the status and keeps the other fields.
+
+## 01_prompt (Phase 4, iteration 1: prompt and post-processing)
+
+Same model and same 100 dpi first-page image as `03_pipeline`. Two changes:
+
+- **Prompt** (`credential_extractor/prompt.py`): one rule per field. What counts as a credential (renewal notices, receipts, forms are not), nulls instead of guesses, names without degree suffixes, license number vs receipt/control numbers, issuer without addresses, and dates copied **as printed** rather than converted. The model no longer returns `expiration_status`. Document content is declared untrusted.
+- **Post-processing** (`credential_extractor/postprocess.py`): `normalize_date` converts printed dates to ISO (`MM/DD/YYYY`, `MM/DD/YY` as `20YY`, `Month DD, YYYY`, `DD Month YYYY`, `DD-MON-YY`; impossible dates become `null`); `strip_degree_suffix` removes trailing `MD`, `RN`, `DDS`, etc. while keeping `Jr.`/`III`. Both run before the status is computed. Covered by `tests/test_postprocess.py` (32 cases, `python -m pytest -q`).
+
+| Field | 03_pipeline | 01_prompt |
+|-------|-------------|-----------|
+| `is_credential` | 100.0% | 100.0% |
+| `holder_name` | 50.0% | 87.5% |
+| `credential_type` | 100.0% | 100.0% |
+| `license_number` | 87.5% | 100.0% |
+| `issuing_authority` | 75.0% | 75.0% |
+| `issue_date` | 87.5% | 100.0% |
+| `expiration_date` | 25.0% | 100.0% |
+| `expiration_status` | 25.0% | 100.0% |
+
+Overall 68.8% → **95.3%**, perfect documents 1/8 → 5/8.
+
+A first version of the `credential_type` rule said "the short name, not the document title", and the model answered `MD` for `al_01` (expected `Certificate of Registration`), a field that was already 100%: 93.8% on that run. The rule now says "what the document certifies, or its title when that is all it states; never the holder's degree". Rerun: 95.3%.
+
+Remaining failures (3 of 64 cells):
+
+- **`tx_01.holder_name`**: `Adriana Lucia Ferrer` without the accent in `LUCÍA`. The previous run read the accent from the same image, so this is reading noise on a rotated 100 dpi page, not a prompt issue. Addressed in Phase 5 (dpi, orientation).
+- **`ny_01` / `ny_02` `issuing_authority`**: the document prints `The State of New York / Department of Professional Registration / Office of Licensed Professions`; the expected value is the condensed `New York State Department of Professional Registration`. A prompt rule that produces exactly that would be fitted to these two documents, so it is left as a known miss rather than tuned.
