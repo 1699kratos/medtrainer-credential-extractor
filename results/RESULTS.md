@@ -138,3 +138,9 @@ Caveat: with 8 documents, a tie is not a strong statistical result. The comparis
 Same pipeline, run with the deployed configuration taken entirely from `.env` (`LLM_PROVIDER=openrouter`, `OPENROUTER_MODEL=deepseek/deepseek-v4.1-flash`, defaults of 150 dpi and up to 3 pages), no command-line overrides. Reproduces `04_deepseek`: **96.9%**, 6/8 perfect documents, $0.0005 per document, ~2.3 s average latency. The two remaining misses are the New York `issuing_authority` cells.
 
 This is the number the README reports as the final result.
+
+## Future improvements (not done, on purpose)
+
+- **Hierarchical issuers.** The two remaining misses are `issuing_authority` on the New York documents, which print the issuer as a three-line hierarchy (state / department / office) while the expected value is the condensed "state + department". A general rule ("when the issuer is a hierarchy, return the department or board prefixed by its state; drop 'The State of…' headers and sub-offices") would likely fix it and is not specific to New York, but with only two such documents there is no way to measure whether it generalizes or what it breaks elsewhere. It was left out to keep the 96.9% explainable rather than chase 100% on the samples. First thing to try with a larger labeled set.
+- **Structured outputs.** `response_format` with the Pydantic JSON schema would make malformed answers impossible instead of caught. Not needed on the samples (0 parse failures across all runs), worth adding once the chosen model's support on OpenRouter is confirmed.
+- **Image uploads without a text layer.** The rotation fix reads the PDF text layer; a sideways PNG/JPG is sent as-is. An orientation pass on the pixels (or asking the model for the rotation first) would cover that case.
