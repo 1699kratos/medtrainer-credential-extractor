@@ -1,0 +1,386 @@
+{
+  "outputs_dir": "results/outputs/07_final",
+  "n_docs": 8,
+  "overall_accuracy": 0.96875,
+  "perfect_docs": 6,
+  "per_field": {
+    "is_credential": 1.0,
+    "holder_name": 1.0,
+    "credential_type": 1.0,
+    "license_number": 1.0,
+    "issuing_authority": 0.75,
+    "issue_date": 1.0,
+    "expiration_date": 1.0,
+    "expiration_status": 1.0
+  },
+  "docs": [
+    {
+      "doc": "al_01",
+      "fields": {
+        "is_credential": {
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        "holder_name": {
+          "expected": "Tamsin Rae Holloway",
+          "actual": "Tamsin Rae Holloway",
+          "ok": true
+        },
+        "credential_type": {
+          "expected": "Certificate of Registration",
+          "actual": "Certificate of Registration",
+          "ok": true
+        },
+        "license_number": {
+          "expected": "MD.41872",
+          "actual": "MD.41872",
+          "ok": true
+        },
+        "issuing_authority": {
+          "expected": "Alabama Medical Registration Commission",
+          "actual": "ALABAMA MEDICAL REGISTRATION COMMISSION",
+          "ok": true
+        },
+        "issue_date": {
+          "expected": "2012-03-14",
+          "actual": "2012-03-14",
+          "ok": true
+        },
+        "expiration_date": {
+          "expected": "2027-12-31",
+          "actual": "2027-12-31",
+          "ok": true
+        },
+        "expiration_status": {
+          "expected": "valid",
+          "actual": "valid",
+          "ok": true
+        }
+      },
+      "correct": 8
+    },
+    {
+      "doc": "al_02",
+      "fields": {
+        "is_credential": {
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        "holder_name": {
+          "expected": "Rafael Ignacio de la Cruz",
+          "actual": "Rafael Ignacio de la Cruz",
+          "ok": true
+        },
+        "credential_type": {
+          "expected": "License to Practice Medicine",
+          "actual": "LICENSE TO PRACTICE MEDICINE",
+          "ok": true
+        },
+        "license_number": {
+          "expected": "MD.20417",
+          "actual": "MD.20417",
+          "ok": true
+        },
+        "issuing_authority": {
+          "expected": "Alabama Medical Registration Commission",
+          "actual": "ALABAMA MEDICAL REGISTRATION COMMISSION",
+          "ok": true
+        },
+        "issue_date": {
+          "expected": "2009-07-15",
+          "actual": "2009-07-15",
+          "ok": true
+        },
+        "expiration_date": {
+          "expected": null,
+          "actual": null,
+          "ok": true
+        },
+        "expiration_status": {
+          "expected": "no_expiration",
+          "actual": "no_expiration",
+          "ok": true
+        }
+      },
+      "correct": 8
+    },
+    {
+      "doc": "al_03",
+      "fields": {
+        "is_credential": {
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        "holder_name": {
+          "expected": null,
+          "actual": null,
+          "ok": true
+        },
+        "credential_type": {
+          "expected": null,
+          "actual": null,
+          "ok": true
+        },
+        "license_number": {
+          "expected": null,
+          "actual": null,
+          "ok": true
+        },
+        "issuing_authority": {
+          "expected": null,
+          "actual": null,
+          "ok": true
+        },
+        "issue_date": {
+          "expected": null,
+          "actual": null,
+          "ok": true
+        },
+        "expiration_date": {
+          "expected": null,
+          "actual": null,
+          "ok": true
+        },
+        "expiration_status": {
+          "expected": null,
+          "actual": null,
+          "ok": true
+        }
+      },
+      "correct": 8
+    },
+    {
+      "doc": "ny_01",
+      "fields": {
+        "is_credential": {
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        "holder_name": {
+          "expected": "HALVORSEN INGRID S",
+          "actual": "HALVORSEN INGRID S",
+          "ok": true
+        },
+        "credential_type": {
+          "expected": "Physician",
+          "actual": "PHYSICIAN",
+          "ok": true
+        },
+        "license_number": {
+          "expected": "301455-01",
+          "actual": "301455-01",
+          "ok": true
+        },
+        "issuing_authority": {
+          "expected": "New York State Department of Professional Registration",
+          "actual": "Office of Licensed Professions",
+          "ok": false
+        },
+        "issue_date": {
+          "expected": null,
+          "actual": null,
+          "ok": true
+        },
+        "expiration_date": {
+          "expected": "2028-03-31",
+          "actual": "2028-03-31",
+          "ok": true
+        },
+        "expiration_status": {
+          "expected": "valid",
+          "actual": "valid",
+          "ok": true
+        }
+      },
+      "correct": 7
+    },
+    {
+      "doc": "ny_02",
+      "fields": {
+        "is_credential": {
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        "holder_name": {
+          "expected": "MBEKI-LINDQVIST NOMVULA GRACE",
+          "actual": "MBEKI-LINDQVIST NOMVULA GRACE",
+          "ok": true
+        },
+        "credential_type": {
+          "expected": "Physician Assistant",
+          "actual": "PHYSICIAN ASSISTANT",
+          "ok": true
+        },
+        "license_number": {
+          "expected": "019873-01",
+          "actual": "019873-01",
+          "ok": true
+        },
+        "issuing_authority": {
+          "expected": "New York State Department of Professional Registration",
+          "actual": "Office of Licensed Professions",
+          "ok": false
+        },
+        "issue_date": {
+          "expected": null,
+          "actual": null,
+          "ok": true
+        },
+        "expiration_date": {
+          "expected": "2026-12-15",
+          "actual": "2026-12-15",
+          "ok": true
+        },
+        "expiration_status": {
+          "expected": "expiring_soon",
+          "actual": "expiring_soon",
+          "ok": true
+        }
+      },
+      "correct": 7
+    },
+    {
+      "doc": "tx_01",
+      "fields": {
+        "is_credential": {
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        "holder_name": {
+          "expected": "ADRIANA LUCÍA FERRER",
+          "actual": "ADRIANA LUCÍA FERRER",
+          "ok": true
+        },
+        "credential_type": {
+          "expected": "Physician License",
+          "actual": "PHYSICIAN LICENSE",
+          "ok": true
+        },
+        "license_number": {
+          "expected": "R4786",
+          "actual": "R4786",
+          "ok": true
+        },
+        "issuing_authority": {
+          "expected": "Texas Board of Medical Licensure",
+          "actual": "TEXAS BOARD OF MEDICAL LICENSURE",
+          "ok": true
+        },
+        "issue_date": {
+          "expected": null,
+          "actual": null,
+          "ok": true
+        },
+        "expiration_date": {
+          "expected": "2027-08-31",
+          "actual": "2027-08-31",
+          "ok": true
+        },
+        "expiration_status": {
+          "expected": "valid",
+          "actual": "valid",
+          "ok": true
+        }
+      },
+      "correct": 8
+    },
+    {
+      "doc": "tx_02",
+      "fields": {
+        "is_credential": {
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        "holder_name": {
+          "expected": "DEVIN KOFI ASANTE",
+          "actual": "DEVIN KOFI ASANTE",
+          "ok": true
+        },
+        "credential_type": {
+          "expected": "Physician Assistant License",
+          "actual": "PHYSICIAN ASSISTANT LICENSE",
+          "ok": true
+        },
+        "license_number": {
+          "expected": "PA20733",
+          "actual": "PA20733",
+          "ok": true
+        },
+        "issuing_authority": {
+          "expected": "Texas Physician Assistant Licensing Board",
+          "actual": "TEXAS PHYSICIAN ASSISTANT LICENSING BOARD",
+          "ok": true
+        },
+        "issue_date": {
+          "expected": null,
+          "actual": null,
+          "ok": true
+        },
+        "expiration_date": {
+          "expected": "2026-02-28",
+          "actual": "2026-02-28",
+          "ok": true
+        },
+        "expiration_status": {
+          "expected": "expired",
+          "actual": "expired",
+          "ok": true
+        }
+      },
+      "correct": 8
+    },
+    {
+      "doc": "tx_03",
+      "fields": {
+        "is_credential": {
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        "holder_name": {
+          "expected": "ROBERT ALAN MITCHELL JR.",
+          "actual": "ROBERT ALAN MITCHELL JR.",
+          "ok": true
+        },
+        "credential_type": {
+          "expected": "Physician License",
+          "actual": "PHYSICIAN LICENSE",
+          "ok": true
+        },
+        "license_number": {
+          "expected": "Q8150",
+          "actual": "Q8150",
+          "ok": true
+        },
+        "issuing_authority": {
+          "expected": "Texas Board of Medical Licensure",
+          "actual": "TEXAS BOARD OF MEDICAL LICENSURE",
+          "ok": true
+        },
+        "issue_date": {
+          "expected": null,
+          "actual": null,
+          "ok": true
+        },
+        "expiration_date": {
+          "expected": "2026-11-30",
+          "actual": "2026-11-30",
+          "ok": true
+        },
+        "expiration_status": {
+          "expected": "expiring_soon",
+          "actual": "expiring_soon",
+          "ok": true
+        }
+      },
+      "correct": 8
+    }
+  ]
+}

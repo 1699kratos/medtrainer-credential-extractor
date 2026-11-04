@@ -15,6 +15,7 @@ raw extractor outputs in `results/outputs/<run>/`.
 | `04_deepseek` | Phase 6 model comparison: same pipeline as `02_input` | OpenRouter / `deepseek/deepseek-v4.1-flash` | **96.9%** | 6/8 | $0.0005 (measured) |
 | `05_gemini` | Phase 6 model comparison: same pipeline as `02_input` | OpenRouter / `google/gemini-2.5-flash` | **81.2%** | 4/8 | $0.0005 (measured) |
 | `06_gpt41mini_or` | Phase 6 model comparison: same pipeline as `02_input` | OpenRouter / `openai/gpt-4.1-mini` | **96.9%** | 6/8 | $0.0017 (measured) |
+| `07_final` | Final configuration, everything from `.env` (no CLI overrides): the setup that is deployed | OpenRouter / `deepseek/deepseek-v4.1-flash` | **96.9%** | 6/8 | $0.0005 (measured) |
 
 ## 00_baseline
 
@@ -131,3 +132,9 @@ The pipeline of `02_input` (same prompt, 150 dpi, up to 3 pages, rotation fix) r
 **Chosen model: `deepseek/deepseek-v4.1-flash`.** Same accuracy as GPT-4.1 mini at a third of the cost and slightly lower latency. The prompt was iterated entirely against GPT-4.1 mini (OpenAI, development key); DeepSeek matching it without any adjustment suggests the field rules are not tuned to one model. It is also the default the base script shipped with.
 
 Caveat: with 8 documents, a tie is not a strong statistical result. The comparison is enough to exclude Gemini and to justify the cost choice between the other two; the unseen documents MedTrainer runs will be the real test.
+
+## 07_final (Phase 7: confirmation run)
+
+Same pipeline, run with the deployed configuration taken entirely from `.env` (`LLM_PROVIDER=openrouter`, `OPENROUTER_MODEL=deepseek/deepseek-v4.1-flash`, defaults of 150 dpi and up to 3 pages), no command-line overrides. Reproduces `04_deepseek`: **96.9%**, 6/8 perfect documents, $0.0005 per document, ~2.3 s average latency. The two remaining misses are the New York `issuing_authority` cells.
+
+This is the number the README reports as the final result.
