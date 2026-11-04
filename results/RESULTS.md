@@ -9,6 +9,7 @@ raw extractor outputs in `results/outputs/<run>/`.
 | Run | Script | Provider / model | Overall | Perfect docs | Cost / doc |
 |-----|--------|------------------|---------|--------------|------------|
 | `00_baseline` | `extract_baseline.py` (original prompt, page 1 at 100 dpi) | OpenAI / `gpt-4.1-mini` | **65.6%** | 0/8 | ~$0.001 (~1.5k tokens) |
+| `03_pipeline` | `extract.py` on the new package (same prompt and 100 dpi, status computed in code, nulls enforced) | OpenAI / `gpt-4.1-mini` | **68.8%** | 1/8 | ~$0.001 |
 
 ## 00_baseline
 
@@ -34,3 +35,27 @@ What failed (22 of 64 cells):
 - **`issuing_authority` too verbose on NY** (2 docs): `The State of New York Department of Professional Registration Office of Licensed Professions` vs expected `New York State Department of Professional Registration`.
 
 What worked: `is_credential` 8/8, `license_number` and `credential_type` 7/8, including the rotated Texas documents. Reading is mostly right; the errors are formatting and logic.
+
+## 03_pipeline (Phase 3: architecture, no prompt change)
+
+Same prompt and 100 dpi first-page render as the baseline. Only the plumbing changed: `credential_extractor/` package (loader, client with retries and temperature 0, Pydantic schema, post-processing, pipeline), `expiration_status` computed in code against `--reference-date`, and all fields nulled when `is_credential` is false.
+
+| Field | Accuracy |
+|-------|----------|
+| `is_credential` | 100.0% |
+| `holder_name` | 50.0% |
+| `credential_type` | 100.0% |
+| `license_number` | 87.5% |
+| `issuing_authority` | 75.0% |
+| `issue_date` | 87.5% |
+| `expiration_date` | 25.0% |
+| `expiration_status` | 25.0% |
+
+Changes vs baseline:
+
+- `al_03` 2/8 → 8/8: the non-credential is now fully nulled by post-processing.
+- `expiration_status` 50% → 25%: the model's guesses are gone; the status is `null` whenever the date is not ISO, which is still every date the original prompt returns. This resolves once dates are normalized (Phase 4).
+- `tx_03.license_number` read as `R8150` instead of `Q8150` (correct in the baseline run): a 100 dpi, rotated page. Motivates the dpi and orientation work of Phase 5.
+- Everything else fails as before: dates as printed, degree suffixes in names, verbose NY issuer.
+
+A first version of the post-processing raised on non-ISO dates and failed 6 of 8 documents entirely (23.4%). The eval caught it before anything else changed; the rule now degrades to `null` for the status and keeps the other fields.
