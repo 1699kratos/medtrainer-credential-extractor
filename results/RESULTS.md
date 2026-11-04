@@ -11,6 +11,7 @@ raw extractor outputs in `results/outputs/<run>/`.
 | `00_baseline` | `extract_baseline.py` (original prompt, page 1 at 100 dpi) | OpenAI / `gpt-4.1-mini` | **65.6%** | 0/8 | ~$0.001 (~1.5k tokens) |
 | `03_pipeline` | `extract.py` on the new package (same prompt and 100 dpi, status computed in code, nulls enforced) | OpenAI / `gpt-4.1-mini` | **68.8%** | 1/8 | ~$0.001 |
 | `01_prompt` | Iteration 1: per-field prompt rules + date/name normalization in code (same model, same 100 dpi image) | OpenAI / `gpt-4.1-mini` | **95.3%** | 5/8 | ~$0.001 (~2.1k tokens) |
+| `02_input` | Iteration 2: pages rotated upright from the text layer, 150 dpi, up to 3 pages (same prompt, same model) | OpenAI / `gpt-4.1-mini` | **96.9%** | 6/8 | ~$0.002 (~5.2k tokens) |
 
 ## 00_baseline
 
@@ -87,3 +88,26 @@ Remaining failures (3 of 64 cells):
 
 - **`tx_01.holder_name`**: `Adriana Lucia Ferrer` without the accent in `LUCÍA`. The previous run read the accent from the same image, so this is reading noise on a rotated 100 dpi page, not a prompt issue. Addressed in Phase 5 (dpi, orientation).
 - **`ny_01` / `ny_02` `issuing_authority`**: the document prints `The State of New York / Department of Professional Registration / Office of Licensed Professions`; the expected value is the condensed `New York State Department of Professional Registration`. A prompt rule that produces exactly that would be fitted to these two documents, so it is left as a known miss rather than tuned.
+
+## 02_input (Phase 5, iteration 2: model input)
+
+Same prompt and model as `01_prompt`. Only what the model sees changed (`credential_extractor/loader.py`, defaults in `extract.py`):
+
+- **Orientation**: each PDF page is rotated upright before rendering, using the majority writing direction of its text layer. The Texas documents are scanned sideways, and `tx_01` has its two pages rotated in opposite directions, so the fix is per page. Pages without a text layer, and PNG/JPG uploads, are sent as they are.
+- **Resolution**: 100 → 150 dpi.
+- **Pages**: first page only → up to 3 pages. The Texas documents have a second page (a pocket card with the same name, number and expiration).
+
+| Field | 01_prompt | 02_input |
+|-------|-----------|----------|
+| `is_credential` | 100.0% | 100.0% |
+| `holder_name` | 87.5% | 100.0% |
+| `credential_type` | 100.0% | 100.0% |
+| `license_number` | 100.0% | 100.0% |
+| `issuing_authority` | 75.0% | 75.0% |
+| `issue_date` | 100.0% | 100.0% |
+| `expiration_date` | 100.0% | 100.0% |
+| `expiration_status` | 100.0% | 100.0% |
+
+Overall 95.3% → **96.9%**, perfect documents 5/8 → 6/8. `tx_01.holder_name` now reads the accent in `LUCÍA`. Input tokens per document went from ~2.1k to ~5.2k (larger image, second page on Texas), cost from ~$0.001 to ~$0.002 per document, latency unchanged (~2 s).
+
+Remaining failures (2 of 64 cells): `ny_01` and `ny_02` `issuing_authority`, as described under `01_prompt`. Left as a known miss on purpose.
