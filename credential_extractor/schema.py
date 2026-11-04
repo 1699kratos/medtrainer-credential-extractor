@@ -1,4 +1,4 @@
-"""Output contract: the 8 fields every extraction must return."""
+"""Output contract: the 8 fields every extraction must return, plus the optional summary (bonus)."""
 
 from __future__ import annotations
 
@@ -22,9 +22,12 @@ class Credential(BaseModel):
     issue_date: str | None = None
     expiration_date: str | None = None
     expiration_status: ExpirationStatus | None = None
+    # Bonus: one- or two-sentence description of the document. Not part of the
+    # field-accuracy eval; scored separately by judge.py (LLM-as-judge).
+    summary: str | None = None
 
     @field_validator("holder_name", "credential_type", "license_number", "issuing_authority",
-                     "issue_date", "expiration_date", mode="before")
+                     "issue_date", "expiration_date", "summary", mode="before")
     @classmethod
     def empty_string_is_null(cls, value):
         """Models sometimes return "" or "null" for missing values; treat both as null."""
@@ -33,7 +36,7 @@ class Credential(BaseModel):
         return value
 
 
-FIELDS = list(Credential.model_fields)
+FIELDS = [f for f in Credential.model_fields if f != "summary"]  # the 8 scored fields
 
 
 def json_schema() -> dict:

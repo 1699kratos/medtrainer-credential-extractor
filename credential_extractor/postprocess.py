@@ -143,8 +143,9 @@ def finalize(cred: Credential, reference_date: date, window_days: int = DEFAULT_
     data = cred.model_dump()
 
     if not data["is_credential"]:
-        # Not a credential: every other field must be null, whatever the model said.
-        return Credential(is_credential=False)
+        # Not a credential: every contract field must be null, whatever the model
+        # said. The summary is kept: it says what the document is instead.
+        return Credential(is_credential=False, summary=data["summary"])
 
     data["holder_name"] = strip_degree_suffix(data["holder_name"])
     data["issue_date"] = normalize_date(data["issue_date"])

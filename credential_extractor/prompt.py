@@ -57,10 +57,17 @@ expiration_date (string or null)
   The date the credential expires, exactly as printed. Do not convert it.
   null if the document shows no expiration date.
 
+summary (string)
+  One or two plain sentences describing the document for a credentialing
+  reviewer: who it was issued to, what credential, by which authority, and
+  the expiration date as printed. If the document is not a credential, say
+  what it is instead (for example a renewal notice). State only what is on
+  the document; never judge whether it is currently valid.
+
 Do not include expiration_status; it is computed outside the model.
 
 Return exactly this shape:
 {"is_credential": ..., "holder_name": ..., "credential_type": ...,
  "license_number": ..., "issuing_authority": ..., "issue_date": ...,
- "expiration_date": ...}
+ "expiration_date": ..., "summary": ...}
 """

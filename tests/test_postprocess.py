@@ -85,6 +85,7 @@ def test_finalize_normalizes_then_computes_status():
 
 
 def test_finalize_nulls_everything_when_not_credential():
-    cred = Credential(is_credential=False, holder_name="X", expiration_date="01/01/2030")
+    cred = Credential(is_credential=False, holder_name="X", expiration_date="01/01/2030", summary="A renewal notice.")
     out = finalize(cred, REF)
-    assert out.model_dump() == Credential(is_credential=False).model_dump()
+    assert out.model_dump() == Credential(is_credential=False, summary="A renewal notice.").model_dump()
+    assert out.holder_name is None and out.expiration_date is None
