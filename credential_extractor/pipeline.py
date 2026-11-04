@@ -37,8 +37,8 @@ def extract(
     path: Path,
     reference_date: date,
     model: str | None = None,
-    dpi: int = 100,
-    max_pages: int = 1,
+    dpi: int = 150,
+    max_pages: int = 3,
     window_days: int = DEFAULT_WINDOW_DAYS,
 ) -> dict:
     """Extract the 8 contract fields from one document.

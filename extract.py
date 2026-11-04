@@ -37,8 +37,8 @@ def main() -> None:
     parser.add_argument("--model", default=None, help=f"Model id (default: {default_model()})")
     parser.add_argument("--reference-date", help="YYYY-MM-DD used for expiration_status (default: REFERENCE_DATE env or today)")
     parser.add_argument("--window-days", type=int, default=int(os.environ.get("EXPIRING_WINDOW_DAYS") or DEFAULT_WINDOW_DAYS))
-    parser.add_argument("--dpi", type=int, default=100)
-    parser.add_argument("--max-pages", type=int, default=1)
+    parser.add_argument("--dpi", type=int, default=150)
+    parser.add_argument("--max-pages", type=int, default=3)
     parser.add_argument("--meta-log", type=Path, help="Append one JSON line of metadata per document here")
     args = parser.parse_args()
 
