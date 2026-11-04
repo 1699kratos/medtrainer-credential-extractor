@@ -21,8 +21,22 @@ from pathlib import Path
 import pymupdf
 import requests
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-DEFAULT_MODEL = "deepseek/deepseek-v4.1-flash"
+# Provider is selected with LLM_PROVIDER (default: openrouter). Only the
+# endpoint, key and default model change; prompt and logic are the original.
+PROVIDERS = {
+    "openrouter": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "key_env": "OPENROUTER_API_KEY",
+        "model_env": "OPENROUTER_MODEL",
+        "default_model": "deepseek/deepseek-v4.1-flash",
+    },
+    "openai": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "key_env": "OPENAI_API_KEY",
+        "model_env": "OPENAI_MODEL",
+        "default_model": "gpt-4.1-mini",
+    },
+}
 SUPPORTED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg", ".webp"}
 
 PROMPT = """Extract the following information from this medical license document
@@ -50,13 +64,21 @@ def load_image(path: Path) -> tuple[str, str]:
     return mime, base64.b64encode(path.read_bytes()).decode()
 
 
+def resolve_provider() -> dict:
+    name = os.environ.get("LLM_PROVIDER", "openrouter").lower()
+    if name not in PROVIDERS:
+        sys.exit(f"LLM_PROVIDER must be one of {list(PROVIDERS)}, got {name!r}")
+    return PROVIDERS[name]
+
+
 def call_model(mime: str, image_b64: str, model: str) -> str:
-    api_key = os.environ.get("OPENROUTER_API_KEY")
+    provider = resolve_provider()
+    api_key = os.environ.get(provider["key_env"])
     if not api_key:
-        sys.exit("OPENROUTER_API_KEY is not set")
+        sys.exit(f"{provider['key_env']} is not set")
 
     response = requests.post(
-        OPENROUTER_URL,
+        provider["url"],
         headers={"Authorization": f"Bearer {api_key}"},
         json={
             "model": model,
@@ -96,7 +118,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Extract credential fields from a document.")
     parser.add_argument("path", type=Path, help="A document or a folder of documents")
     parser.add_argument("--out-dir", type=Path, help="Write one <document>.json per input here")
-    parser.add_argument("--model", default=os.environ.get("OPENROUTER_MODEL", DEFAULT_MODEL))
+    provider = resolve_provider()
+    parser.add_argument("--model", default=os.environ.get(provider["model_env"]) or provider["default_model"])
     args = parser.parse_args()
 
     if args.path.is_dir():
