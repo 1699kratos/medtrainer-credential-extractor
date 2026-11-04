@@ -16,6 +16,7 @@ raw extractor outputs in `results/outputs/<run>/`.
 | `05_gemini` | Phase 6 model comparison: same pipeline as `02_input` | OpenRouter / `google/gemini-2.5-flash` | **81.2%** | 4/8 | $0.0005 (measured) |
 | `06_gpt41mini_or` | Phase 6 model comparison: same pipeline as `02_input` | OpenRouter / `openai/gpt-4.1-mini` | **96.9%** | 6/8 | $0.0017 (measured) |
 | `07_final` | Final configuration, everything from `.env` (no CLI overrides): the setup that is deployed | OpenRouter / `deepseek/deepseek-v4.1-flash` | **96.9%** | 6/8 | $0.0005 (measured) |
+| `08_summary` | Bonus: `summary` field added to the prompt and schema; the 8 scored fields unchanged | OpenRouter / `deepseek/deepseek-v4.1-flash` | **96.9%** | 6/8 | $0.0006 (measured) |
 
 ## 00_baseline
 
@@ -138,6 +139,26 @@ Caveat: with 8 documents, a tie is not a strong statistical result. The comparis
 Same pipeline, run with the deployed configuration taken entirely from `.env` (`LLM_PROVIDER=openrouter`, `OPENROUTER_MODEL=deepseek/deepseek-v4.1-flash`, defaults of 150 dpi and up to 3 pages), no command-line overrides. Reproduces `04_deepseek`: **96.9%**, 6/8 perfect documents, $0.0005 per document, ~2.3 s average latency. The two remaining misses are the New York `issuing_authority` cells.
 
 This is the number the README reports as the final result.
+
+## 08_summary (bonus: free-text summary, scored with LLM-as-judge)
+
+The brief's optional bonus. A `summary` field (one or two sentences for a credentialing reviewer: who, what credential, which authority, expiration as printed; for a non-credential, what the document is instead) was added to the prompt and the schema. It is not one of the 8 scored fields: `eval.py` ignores it, and the accuracy run with the new prompt is unchanged at 96.9%. Extraction cost per document rose from $0.0005 to $0.0006.
+
+A summary has no single correct string, so `judge.py` scores it against the **expected fields** of each document (not the image) with a judge model different from the extractor. Three criteria, pass/fail per document, one reason each: `faithful` (nothing contradicts the expected fields), `complete` (holder, credential, expiration, or "not a credential"), `concise`. Results saved in `results/judge_<label>.json`.
+
+| Judge run | Judge model | faithful | complete | concise | all three |
+|-----------|-------------|----------|----------|---------|-----------|
+| First rubric | `gpt-4.1-mini` | 62.5% | 87.5% | 0.0% | 0/8 |
+| Fixed rubric, concise in code | `gpt-4.1-mini` | 87.5% | 87.5% | 100% | 7/8 |
+| Same, stronger judge | `gpt-4.1` | 100% | 100% | 100% | 8/8 |
+
+What the first run taught:
+
+- **The judge drifted from the rubric.** "Concise: at most two sentences" became "longer than necessary"; it failed every document, including one-sentence summaries. Conciseness is now counted in code (sentences and words), and the judge only decides what needs judgment: faithful and complete.
+- **The rubric had holes.** For the non-credential, every expected field is `null` by design, and the judge read the summary's details as contradictions. Same for an issuer written in full vs the condensed expected value, and for the summary reporting the "synthetic test document" footer printed on the samples. The rubric now says explicitly that another form of the same value, a printed remark, and details on a non-credential are not contradictions.
+- **Judge quality depends on the judge model.** With the fixed rubric, `gpt-4.1-mini` still failed `al_03` although the summary says the document "is not a license"; `gpt-4.1` passed it. The judge cost 5× more ($0.013 vs $0.003 for 8 documents), which is nothing for an eval that runs rarely, so `gpt-4.1` is the default.
+
+An LLM judge is itself a model that needs evaluating. The three runs above are that evaluation on this set. For a larger suite (more criteria, score history, CI gates) the same judging would move to a framework such as DeepEval (`GEval` with the same criteria) or promptfoo, rather than a hand-written script; the criteria and the lessons stay.
 
 ## Future improvements (not done, on purpose)
 

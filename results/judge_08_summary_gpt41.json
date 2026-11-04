@@ -1,0 +1,115 @@
+{
+  "judge_model": "openai/gpt-4.1",
+  "per_criterion": {
+    "faithful": 1.0,
+    "complete": 1.0,
+    "concise": 1.0
+  },
+  "all_pass": 8,
+  "docs": [
+    {
+      "doc": "al_01",
+      "summary": "Certificate of Registration issued by the Alabama Medical Registration Commission to Tamsin Rae Holloway, MD, for annual registration to practice medicine in Alabama, license # MD.41872, issued 03/14/2012 and expiring 12/31/2027.",
+      "faithful": true,
+      "complete": true,
+      "concise": true,
+      "reasons": {
+        "faithful": "The summary accurately reflects all verified fields: holder name, credential type, issuing authority, license number, issue date, and expiration date. There are no contradictions or incorrect values.",
+        "complete": "The summary provides the credential holder's name, the type of credential, and the expiration date, ensuring a reviewer learns all required information.",
+        "concise": "1 sentence(s), 31 words (limits: 2, 60)"
+      },
+      "judge_cost_usd": 0.0016
+    },
+    {
+      "doc": "al_02",
+      "summary": "The Alabama Medical Registration Commission issued a License to Practice Medicine to Rafael Ignacio de la Cruz, MD, license number MD.20417, dated 2009-07-15. The document states the license must be accompanied by a current annual Certificate of Registration and shows no expiration date.",
+      "faithful": true,
+      "complete": true,
+      "concise": true,
+      "reasons": {
+        "faithful": "The summary accurately reflects all verified fields, including the holder's name, credential type, issuing authority, license number, issue date, and the absence of an expiration date. Additional details about the certificate of registration do not contradict the verified fields.",
+        "complete": "The summary provides the credential holder's name, the type of credential, and clearly states that there is no expiration date, meeting all completeness requirements.",
+        "concise": "2 sentence(s), 43 words (limits: 2, 60)"
+      },
+      "judge_cost_usd": 0.001714
+    },
+    {
+      "doc": "al_03",
+      "summary": "This is an Annual Registration Renewal Notice - 2027 from the Alabama Medical Registration Commission, addressed to Prakash Venkataraman MD, requesting renewal of License # MD.33950 for the 2027 registration year with payment due by 12/31/2026. The notice states it is a request for payment only and is not a license, permit or certificate of registration.",
+      "faithful": true,
+      "complete": true,
+      "concise": true,
+      "reasons": {
+        "faithful": "The summary does not contradict any verified fields and correctly states that the document is not a license, permit, or certificate of registration, which aligns with is_credential being false.",
+        "complete": "The summary clearly describes the document as a renewal notice and not a credential, which is sufficient for completeness when is_credential is false.",
+        "concise": "2 sentence(s), 56 words (limits: 2, 60)"
+      },
+      "judge_cost_usd": 0.001586
+    },
+    {
+      "doc": "ny_01",
+      "summary": "Registration certificate issued by The State of New York Department of Professional Registration, Office of Licensed Professions to Ingrid S Halvorsen, registering her to practice in New York State as a Physician through 03/31/2028. The page footer is marked \"SYNTHETIC TEST DOCUMENT - FICTIONAL DATA - NOT A VALID LICENSE\".",
+      "faithful": true,
+      "complete": true,
+      "concise": true,
+      "reasons": {
+        "faithful": "The summary accurately reflects the holder's name, credential type, issuing authority, and expiration date. It does not contradict any verified field and extra details such as the synthetic/test notice are acceptable.",
+        "complete": "The summary provides the holder's name, the credential type (Physician), and the expiration date (03/31/2028), meeting all requirements for completeness.",
+        "concise": "2 sentence(s), 50 words (limits: 2, 60)"
+      },
+      "judge_cost_usd": 0.001694
+    },
+    {
+      "doc": "ny_02",
+      "summary": "This is a New York State Registration Certificate issued to MBEKI-LINDQVIST NOMVULA GRACE, registering her to practice as a Physician Assistant through 12/15/26. It was issued by The State of New York Department of Professional Registration, Office of Licensed Professions, with License Number 019873-01.",
+      "faithful": true,
+      "complete": true,
+      "concise": true,
+      "reasons": {
+        "faithful": "The summary accurately reflects all verified fields: the holder's name, credential type, license number, issuing authority, and expiration date. There are no contradictions or incorrect values. The mention of 'Office of Licensed Professions' is an extra detail, not a contradiction.",
+        "complete": "The summary provides the holder's name, the credential type, and the expiration date, fulfilling all requirements for completeness.",
+        "concise": "2 sentence(s), 44 words (limits: 2, 60)"
+      },
+      "judge_cost_usd": 0.001742
+    },
+    {
+      "doc": "tx_01",
+      "summary": "A Texas Board of Medical Licensure physician license issued to Adriana Lucía Ferrer, MD, bearing license number R4786 and an expiration date of 08/31/2027. The document also notes the licensee is authorized for office based anesthesia.",
+      "faithful": true,
+      "complete": true,
+      "concise": true,
+      "reasons": {
+        "faithful": "The summary accurately reflects the holder's name, credential type, issuing authority, license number, and expiration date. The mention of 'MD' and authorization for office based anesthesia are extra details, not contradictions.",
+        "complete": "The summary provides the holder's name, the credential type, and the expiration date, fulfilling all completeness requirements.",
+        "concise": "2 sentence(s), 36 words (limits: 2, 60)"
+      },
+      "judge_cost_usd": 0.001604
+    },
+    {
+      "doc": "tx_02",
+      "summary": "A Texas Physician Assistant License was issued to Devin Kofi Asante by the Texas Physician Assistant Licensing Board, bearing license number PA20733 and an expiration date of 02/28/2026. The document is marked as a synthetic test document with fictional data and not a valid license.",
+      "faithful": true,
+      "complete": true,
+      "concise": true,
+      "reasons": {
+        "faithful": "The summary accurately reflects all verified fields: holder name, credential type, issuing authority, license number, and expiration date. The note about the document being synthetic is an extra detail and not a contradiction.",
+        "complete": "The summary provides the holder's name, the credential type, the issuing authority, the license number, and the expiration date, meeting all requirements for completeness.",
+        "concise": "2 sentence(s), 45 words (limits: 2, 60)"
+      },
+      "judge_cost_usd": 0.001668
+    },
+    {
+      "doc": "tx_03",
+      "summary": "A Texas physician license was issued to Robert Alan Mitchell Jr. by the Texas Board of Medical Licensure, license number Q8150, with an expiration date of 11/30/2026. The document also notes the licensee is not authorized for office based anesthesia.",
+      "faithful": true,
+      "complete": true,
+      "concise": true,
+      "reasons": {
+        "faithful": "The summary accurately reflects all verified fields, including the holder's name, credential type, issuing authority, license number, and expiration date. The additional note about office based anesthesia does not contradict any verified field.",
+        "complete": "The summary provides the holder's name, the credential type, and the expiration date, fulfilling all requirements for completeness.",
+        "concise": "2 sentence(s), 40 words (limits: 2, 60)"
+      },
+      "judge_cost_usd": 0.001608
+    }
+  ]
+}

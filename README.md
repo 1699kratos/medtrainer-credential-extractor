@@ -16,6 +16,7 @@ Built for the MedTrainer AI Engineer technical challenge ([CHALLENGE.md](CHALLEN
 5. [Taking this to production with real PHI](#5-taking-this-to-production-with-real-phi)
 6. [How AI tools were used](#6-how-ai-tools-were-used)
 7. [Known limits and next steps](#7-known-limits-and-next-steps)
+8. [Bonus: summary field scored with LLM-as-judge](#8-bonus-summary-field-scored-with-llm-as-judge)
 
 ## 1. How to run it
 
@@ -51,7 +52,8 @@ streamlit run app.py
 ```bash
 python extract.py docs/ --out-dir results/outputs/my_run --reference-date 2026-11-01 --meta-log results/outputs/my_run/meta.jsonl
 python eval.py results/outputs/my_run --label my_run      # per-field accuracy, saves results/my_run.json
-python -m pytest -q                                       # 42 unit tests, no API calls
+python -m pytest -q                                       # 49 unit tests, no API calls
+python judge.py results/outputs/my_run --label my_run     # bonus: scores the summary field (section 8)
 ```
 
 The eval compares each of the 8 fields against `expected/<doc>.json`: strings after trimming, whitespace collapse and case folding; dates as exact ISO strings; `null` only matches `null`. A document the extractor fails on counts as 8 wrong cells. The reference date for the eval is the one shipped in `expected/_reference.json` (`2026-11-01`), so results do not drift over time.
@@ -75,6 +77,7 @@ app.py                     Streamlit upload UI (what is deployed)
 extract.py                 CLI: one document or a folder -> JSON files
 extract_baseline.py        The original script, unchanged except for the provider switch (baseline)
 eval.py                    Field-level eval against expected/
+judge.py                   LLM-as-judge for the bonus summary field
 credential_extractor/
   loader.py                PDF/image -> page images (rotation fix from the text layer, dpi, page cap)
   client.py                OpenAI-compatible chat call: provider switch, retries, usage/cost
@@ -82,7 +85,7 @@ credential_extractor/
   schema.py                Pydantic contract for the 8 fields
   postprocess.py           Date normalization, name cleanup, expiration_status, null enforcement
   pipeline.py              extract(): document -> images -> model -> validated JSON + metadata
-tests/                     Unit tests for postprocess and loader
+tests/                     Unit tests for postprocess, loader and judge
 docs/, expected/           The 8 sample documents and their expected JSON
 results/                   RESULTS.md (every run, what changed, why), report.html, raw outputs per run
 PLAN.md                    The implementation plan this work followed
@@ -203,7 +206,7 @@ Claude Code was the pair programmer for the whole project. The process was conve
 
 What the human decided: the platform (Hugging Face Spaces was the first choice; it now requires a paid plan for Gradio apps, so Streamlit Community Cloud), the development key strategy, the model, not chasing 100% on the New York issuer, and which of the assistant's proposals to accept. Every commit was reviewed and approved before it was made.
 
-What was verified rather than trusted: 42 unit tests on the deterministic code, the eval after every change (which caught two regressions the assistant introduced, both recorded in section 2), and the deployed app tested from a browser with a real upload before it was called done.
+What was verified rather than trusted: 42 unit tests on the deterministic code, the eval after every change (which caught two regressions the assistant introduced, both recorded in section 2), and the deployed app tested from a browser with a real upload before it was called done. The LLM judge for the bonus was itself checked: its first rubric failed every document on a criterion it had made up, and that run is kept in the record (section 8).
 
 The challenge key was never used with AI coding tools. Development ran on a personal OpenAI key; the challenge key was used only for the model comparison, the confirmation run and the deployment, as the brief asks.
 
@@ -215,5 +218,21 @@ Nothing here is a bug the eval found and that was left unfixed; these are the ed
 - **Rotation on plain images.** The orientation fix reads the PDF text layer. A sideways PNG or JPG is sent as-is; the model copes, but worse. An orientation pass on the pixels, or a first cheap call that only returns the rotation, would close that gap.
 - **Structured outputs.** `response_format` with the JSON schema is not enabled; there were zero parse failures across every run, so it was not needed for the samples. Worth enabling once the chosen model's support on OpenRouter is confirmed, with the current parser as fallback.
 - **Eight documents.** The model comparison can exclude a model that fails badly; it cannot separate two that tie. The numbers in this README are honest for these documents and should be read as a floor for the method, not a guarantee on new ones.
-- **Optional bonus not done.** The brief suggests a free-text summary field scored with an LLM judge. It was left out to keep the deliverable focused; the schema and prompt have a single place to add a field, and `eval.py` a single place to add a scorer.
+- **The summary judge is a model too.** Section 8 shows its verdicts change with the rubric and with the judge model. Eight documents are enough to find those problems, not to claim the judge is reliable; it needs the same growing labeled set as the extractor.
 - **Deployment tier.** Streamlit's free tier sleeps after 12 hours idle and renders PDFs slower than a laptop (3 to 6 s per document). Fine for a demo; a production deployment would run the worker separately from the UI.
+
+## 8. Bonus: summary field scored with LLM-as-judge
+
+The extractor also returns a `summary`: one or two sentences for a credentialing reviewer (who, what credential, which authority, expiration as printed; for a non-credential, what the document is instead). It is not one of the 8 scored fields and did not change their accuracy (run `08_summary`, 96.9%).
+
+A summary has no single correct string, so [judge.py](judge.py) scores it with a second model against the **expected fields** of each document, not the image, on three pass/fail criteria: **faithful** (nothing contradicts the expected fields), **complete** (holder, credential and expiration, or "not a credential"), and **concise** (at most two sentences and 60 words, counted in code). The judge is a different model from the extractor on purpose.
+
+| Judge run | Judge model | faithful | complete | concise | all three |
+|-----------|-------------|----------|----------|---------|-----------|
+| First rubric | `gpt-4.1-mini` | 62.5% | 87.5% | 0.0% | 0/8 |
+| Fixed rubric, concise in code | `gpt-4.1-mini` | 87.5% | 87.5% | 100% | 7/8 |
+| Same, stronger judge | `gpt-4.1` | 100% | 100% | 100% | 8/8 |
+
+The first run is the interesting one. The judge failed every document on "concise" by inventing a stricter rule than the rubric ("longer than necessary" instead of "at most two sentences"), so that criterion moved to code. It also read details on the non-credential as contradictions of the `null` expected fields, and the issuer in long form as a contradiction of the condensed one; the rubric now names those cases. With the fixed rubric `gpt-4.1-mini` still failed one correct summary that `gpt-4.1` passed, so the stronger model is the default judge ($0.013 for 8 documents). Details and the saved verdicts: [results/RESULTS.md](results/RESULTS.md), `results/judge_*.json`.
+
+The judge is hand-written so the rubric is readable in the repo. In production, with more criteria, score history and CI gates, the same criteria would run under an evaluation framework such as [DeepEval](https://github.com/confident-ai/deepeval) (`GEval`) or promptfoo, with the judge model itself tracked as a versioned dependency.
