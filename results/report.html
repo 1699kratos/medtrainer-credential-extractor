@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Credential Extractor Results</title>
+<style>
+  /* Layout: one column of sections, summary first, detail after. Charts are inline SVG drawn from the data tables below. */
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+    --seq-1: #cde2fb; --seq-2: #9ec5f4; --seq-3: #6da7ec; --seq-4: #3987e5; --seq-5: #256abf; --seq-6: #184f95;
+    --good: #006300; --critical: #d03b3b;
+    --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+      --seq-1: #184f95; --seq-2: #1c5cab; --seq-3: #256abf; --seq-4: #2a78d6; --seq-5: #3987e5; --seq-6: #6da7ec;
+      --good: #0ca30c; --critical: #e66767;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    --seq-1: #184f95; --seq-2: #1c5cab; --seq-3: #256abf; --seq-4: #2a78d6; --seq-5: #3987e5; --seq-6: #6da7ec;
+    --good: #0ca30c; --critical: #e66767;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5;
+         padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  main { max-width: 1040px; margin: 0 auto; display: grid; gap: 40px; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 6px; text-wrap: balance; }
+  h2 { font-size: 18px; margin: 0 0 4px; }
+  .sub { color: var(--ink-2); margin: 0; max-width: 68ch; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+  section { display: grid; gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; min-width: 0; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .tile .label { font-size: 13px; color: var(--ink-2); }
+  .tile .value { font-size: 40px; font-weight: 600; line-height: 1.1; margin-top: 4px; }
+  .tile .delta { font-size: 13px; color: var(--good); margin-top: 6px; }
+  .tile .note { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  svg text { font-family: var(--font); fill: var(--ink-2); font-size: 12px; }
+  svg .tick { font-variant-numeric: tabular-nums; fill: var(--muted); font-size: 11px; }
+  svg .val { fill: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  svg .cat { fill: var(--ink); }
+  svg .grid { stroke: var(--grid); stroke-width: 1; }
+  svg .axis { stroke: var(--axis); stroke-width: 1; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--ink-2); }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  /* Heatmap */
+  .heat { display: grid; gap: 2px; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .heat .h { color: var(--muted); font-size: 12px; padding: 4px 6px; text-align: center; align-self: end; }
+  .heat .r { color: var(--ink); padding: 6px 8px 6px 0; white-space: nowrap; }
+  .heat .c { padding: 6px 4px; text-align: center; border-radius: 3px; color: var(--ink); cursor: default; }
+  .heat .c.dark { color: #fff; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th { text-align: left; font-weight: 600; color: var(--ink-2); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 10px; border-bottom: 1px solid var(--axis); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  td.num { text-align: right; }
+  th.num { text-align: right; }
+  .pill { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-2); }
+  .pill.chosen { color: var(--good); border-color: var(--good); font-weight: 600; }
+  .pill.out { color: var(--critical); border-color: var(--critical); }
+  ul { margin: 0; padding-left: 20px; }
+  li { margin: 4px 0; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; background: var(--grid); padding: 1px 5px; border-radius: 3px; }
+  #tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--page); font-size: 12px; padding: 6px 9px; border-radius: 4px; opacity: 0; transition: opacity .12s; max-width: 260px; z-index: 5; }
+  @media (prefers-reduced-motion: reduce) { #tip { transition: none; } }
+  footer { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">MedTrainer technical challenge</p>
+    <h1>Credential Extractor Results</h1>
+    <p class="sub">Field-level accuracy on the 8 sample documents (8 fields each, 64 cells). Reference date 2026-11-01, 60-day expiring window. Every number below comes from <code>results/&lt;run&gt;.json</code> and the per-run <code>meta.jsonl</code> logs.</p>
+  </header>
+
+  <section>
+    <div class="tiles">
+      <div class="card tile"><div class="label">Final accuracy</div><div class="value">96.9%</div><div class="delta">+31.3 pts vs baseline (65.6%)</div></div>
+      <div class="card tile"><div class="label">Perfect documents</div><div class="value">6 / 8</div><div class="delta">from 0 / 8</div></div>
+      <div class="card tile"><div class="label">Cost per document</div><div class="value">$0.0005</div><div class="note">measured on OpenRouter</div></div>
+      <div class="card tile"><div class="label">Avg latency</div><div class="value">2.3 s</div><div class="note">deepseek-v4.1-flash</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div><h2>Accuracy by iteration</h2><p class="sub">Same model throughout (gpt-4.1-mini, development key). Each run changes one thing and is re-measured.</p></div>
+    <div class="card"><svg id="iter" viewBox="0 0 960 300" role="img" aria-label="Overall accuracy per iteration"></svg></div>
+  </section>
+
+  <section>
+    <div><h2>Accuracy by field</h2><p class="sub">Which fields each iteration fixed. Dates and status were the biggest gap; both reached 100% once dates were normalized in code.</p></div>
+    <div class="card scroll"><div id="heat" class="heat"></div></div>
+  </section>
+
+  <section>
+    <div><h2>Model comparison</h2><p class="sub">Final pipeline run through OpenRouter with three vision models. Same prompt, 150 dpi, up to 3 pages. Cost is what OpenRouter reports per request.</p></div>
+    <div class="two">
+      <div class="card"><p class="eyebrow">Overall accuracy</p><svg id="macc" viewBox="0 0 460 170" role="img" aria-label="Accuracy per model"></svg></div>
+      <div class="card"><p class="eyebrow">Cost per document (USD)</p><svg id="mcost" viewBox="0 0 460 170" role="img" aria-label="Cost per document per model"></svg></div>
+    </div>
+    <div class="card scroll">
+      <table>
+        <thead><tr><th>Model</th><th class="num">Accuracy</th><th class="num">Perfect docs</th><th class="num">Cost / doc</th><th class="num">Latency</th><th class="num">Input tokens / doc</th><th>Decision</th></tr></thead>
+        <tbody>
+          <tr><td>deepseek/deepseek-v4.1-flash</td><td class="num">96.9%</td><td class="num">6 / 8</td><td class="num">$0.0005</td><td class="num">2.2 s</td><td class="num">2.0k</td><td><span class="pill chosen">Chosen</span></td></tr>
+          <tr><td>openai/gpt-4.1-mini</td><td class="num">96.9%</td><td class="num">6 / 8</td><td class="num">$0.0017</td><td class="num">2.8 s</td><td class="num">3.9k</td><td><span class="pill">Tie on accuracy, 3× cost</span></td></tr>
+          <tr><td>google/gemini-2.5-flash</td><td class="num">81.2%</td><td class="num">4 / 8</td><td class="num">$0.0005</td><td class="num">1.8 s</td><td class="num">1.0k</td><td><span class="pill out">Out: false negative on al_01</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div><h2>Correct fields per document</h2><p class="sub">Out of 8. The Texas documents are scanned sideways; al_03 is a renewal notice, not a credential.</p></div>
+    <div class="card scroll"><div id="docs" class="heat"></div></div>
+  </section>
+
+  <section>
+    <div><h2>What is still wrong, and why</h2></div>
+    <div class="card">
+      <ul>
+        <li><strong>ny_01, ny_02 · issuing_authority.</strong> The document prints three stacked lines (<em>The State of New York / Department of Professional Registration / Office of Licensed Professions</em>); the expected value is a condensed rewrite. A rule that reproduces it exactly would be tuned to these two documents, so it is left as a known miss.</li>
+        <li><strong>Fixed along the way.</strong> Dates in any printed format → ISO in code. Degree suffixes (MD, RN, DDS) stripped from names. <code>expiration_status</code> computed from the reference date, never by the model. Sideways pages rotated upright from the PDF text layer, which recovered the accent in <em>LUCÍA</em> on tx_01.</li>
+        <li><strong>Caught by the eval.</strong> A first post-processing version raised on non-ISO dates and failed 6 of 8 documents (23.4%). A first wording of the <code>credential_type</code> rule regressed al_01 (93.8%). Both were visible before anything else changed.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>Eval: <code>python eval.py results/outputs/&lt;run&gt;/ --label &lt;run&gt;</code>. Strings compared after trimming, whitespace collapse and case folding; dates exact ISO; null only matches null. Full write-up in <code>results/RESULTS.md</code>.</footer>
+</main>
+<div id="tip" role="tooltip"></div>
+
+<script>
+(function () {
+  const FIELDS = ["is_credential","holder_name","credential_type","license_number","issuing_authority","issue_date","expiration_date","expiration_status"];
+  const RUNS = [
+    { id: "00_baseline", label: "Baseline", what: "original script", overall: 65.6, perfect: 0,
+      fields: [100,37.5,87.5,87.5,62.5,87.5,12.5,50], docs: [5,7,2,6,5,6,6,5] },
+    { id: "03_pipeline", label: "Pipeline", what: "status in code, nulls enforced", overall: 68.8, perfect: 1,
+      fields: [100,50,100,87.5,75,87.5,25,25], docs: [4,7,8,5,5,5,6,4] },
+    { id: "01_prompt", label: "Iteration 1", what: "prompt rules + normalization", overall: 95.3, perfect: 5,
+      fields: [100,87.5,100,100,75,100,100,100], docs: [8,8,8,7,7,7,8,8] },
+    { id: "02_input", label: "Iteration 2", what: "rotation, 150 dpi, 3 pages", overall: 96.9, perfect: 6,
+      fields: [100,100,100,100,75,100,100,100], docs: [8,8,8,7,7,8,8,8] },
+  ];
+  const DOCS = ["al_01","al_02","al_03","ny_01","ny_02","tx_01","tx_02","tx_03"];
+  const MODELS = [
+    { name: "deepseek-v4.1-flash", acc: 96.9, cost: 0.00052, color: "var(--s1)", docs: [8,8,8,7,7,8,8,8] },
+    { name: "gpt-4.1-mini", acc: 96.9, cost: 0.00169, color: "var(--s2)" },
+    { name: "gemini-2.5-flash", acc: 81.2, cost: 0.00050, color: "var(--s3)", docs: [0,8,8,7,6,7,8,8] },
+  ];
+
+  const tip = document.getElementById("tip");
+  function bindTip(el, text) {
+    el.addEventListener("mousemove", e => { tip.textContent = text; tip.style.opacity = 1; tip.style.left = (e.clientX + 14) + "px"; tip.style.top = (e.clientY + 14) + "px"; });
+    el.addEventListener("mouseleave", () => { tip.style.opacity = 0; });
+  }
+  const NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, text) { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (text != null) n.textContent = text; return n; }
+
+  // Iteration columns: one series, 0-100 scale, value on the cap, change note under the label.
+  (function () {
+    const svg = document.getElementById("iter");
+    const W = 960, H = 300, L = 48, R = 16, T = 28, B = 64, pw = W - L - R, ph = H - T - B;
+    const y = v => T + ph - (v / 100) * ph;
+    [0,25,50,75,100].forEach(v => {
+      svg.appendChild(el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), class: v === 0 ? "axis" : "grid" }));
+      svg.appendChild(el("text", { x: L - 8, y: y(v) + 4, "text-anchor": "end", class: "tick" }, v + "%"));
+    });
+    const band = pw / RUNS.length, bw = 24;
+    RUNS.forEach((r, i) => {
+      const cx = L + band * i + band / 2, top = y(r.overall), h = y(0) - top;
+      const g = el("g", {});
+      const rect = el("path", { d: `M${cx - bw/2},${y(0)} v${-(h - 4)} a4,4 0 0 1 4,-4 h${bw - 8} a4,4 0 0 1 4,4 v${h - 4} z`, fill: "var(--s1)" });
+      g.appendChild(rect);
+      g.appendChild(el("text", { x: cx, y: top - 8, "text-anchor": "middle", class: "val" }, r.overall + "%"));
+      g.appendChild(el("text", { x: cx, y: y(0) + 20, "text-anchor": "middle", class: "cat" }, r.label));
+      g.appendChild(el("text", { x: cx, y: y(0) + 38, "text-anchor": "middle", class: "tick" }, r.what));
+      if (i > 0) g.appendChild(el("text", { x: cx, y: top - 24, "text-anchor": "middle", class: "tick" }, "+" + (r.overall - RUNS[i-1].overall).toFixed(1) + " pts"));
+      svg.appendChild(g);
+      bindTip(g, `${r.id}: ${r.overall}% overall, ${r.perfect}/8 perfect documents`);
+    });
+  })();
+
+  // Field heatmap: sequential blue ramp, value in every cell.
+  function ramp(v) { return v >= 100 ? 6 : v >= 87.5 ? 5 : v >= 75 ? 4 : v >= 50 ? 3 : v >= 25 ? 2 : 1; }
+  (function () {
+    const grid = document.getElementById("heat");
+    grid.style.gridTemplateColumns = `max-content repeat(${RUNS.length}, minmax(86px, 1fr))`;
+    grid.appendChild(Object.assign(document.createElement("div"), { className: "h" }));
+    RUNS.forEach(r => { const d = document.createElement("div"); d.className = "h"; d.textContent = r.label; grid.appendChild(d); });
+    FIELDS.forEach((f, fi) => {
+      const rl = document.createElement("div"); rl.className = "r"; rl.textContent = f; grid.appendChild(rl);
+      RUNS.forEach(r => {
+        const v = r.fields[fi], c = document.createElement("div"), step = ramp(v);
+        c.className = "c" + (step >= 4 ? " dark" : ""); c.style.background = `var(--seq-${step})`; c.textContent = v + "%";
+        bindTip(c, `${r.id} · ${f}: ${v}% (${Math.round(v / 12.5)}/8 documents)`);
+        grid.appendChild(c);
+      });
+    });
+  })();
+
+  // Horizontal bars for the model comparison. One measure per chart, value at the tip, text in ink.
+  function hbars(id, items, max, fmt, ticks) {
+    const svg = document.getElementById(id);
+    const W = 460, H = 170, L = 136, R = 56, T = 8, B = 26, pw = W - L - R, ph = H - T - B;
+    const x = v => L + (v / max) * pw;
+    ticks.forEach(v => {
+      svg.appendChild(el("line", { x1: x(v), x2: x(v), y1: T, y2: T + ph, class: v === 0 ? "axis" : "grid" }));
+      svg.appendChild(el("text", { x: x(v), y: H - 8, "text-anchor": "middle", class: "tick" }, fmt(v)));
+    });
+    const band = ph / items.length, bh = 22;
+    items.forEach((m, i) => {
+      const cy = T + band * i + band / 2, w = x(m.v) - x(0);
+      const g = el("g", {});
+      g.appendChild(el("path", { d: `M${x(0)},${cy - bh/2} h${Math.max(w - 4, 0)} a4,4 0 0 1 4,4 v${bh - 8} a4,4 0 0 1 -4,4 h${-Math.max(w - 4, 0)} z`, fill: m.color }));
+      g.appendChild(el("text", { x: L - 10, y: cy + 4, "text-anchor": "end", class: "cat" }, m.name));
+      g.appendChild(el("text", { x: x(m.v) + 8, y: cy + 4, class: "val" }, fmt(m.v)));
+      svg.appendChild(g);
+      bindTip(g, `${m.name}: ${fmt(m.v)}`);
+    });
+  }
+  hbars("macc", MODELS.map(m => ({ name: m.name, v: m.acc, color: m.color })), 100, v => v + "%", [0,25,50,75,100]);
+  hbars("mcost", MODELS.map(m => ({ name: m.name, v: m.cost, color: m.color })), 0.002, v => "$" + v.toFixed(4), [0,0.0005,0.001,0.0015,0.002]);
+
+  // Per-document grid: iterations plus the two OpenRouter models that differ.
+  (function () {
+    const grid = document.getElementById("docs");
+    const cols = RUNS.map(r => ({ label: r.label, id: r.id, docs: r.docs }))
+      .concat([{ label: "DeepSeek", id: "04_deepseek", docs: MODELS[0].docs }, { label: "Gemini", id: "05_gemini", docs: MODELS[2].docs }]);
+    grid.style.gridTemplateColumns = `max-content repeat(${cols.length}, minmax(72px, 1fr))`;
+    grid.appendChild(Object.assign(document.createElement("div"), { className: "h" }));
+    cols.forEach(c => { const d = document.createElement("div"); d.className = "h"; d.textContent = c.label; grid.appendChild(d); });
+    DOCS.forEach((doc, di) => {
+      const rl = document.createElement("div"); rl.className = "r"; rl.textContent = doc; grid.appendChild(rl);
+      cols.forEach(c => {
+        const n = c.docs[di], v = n * 12.5, cell = document.createElement("div"), step = ramp(v);
+        cell.className = "c" + (step >= 4 ? " dark" : ""); cell.style.background = `var(--seq-${step})`; cell.textContent = n + "/8";
+        bindTip(cell, `${c.id} · ${doc}: ${n} of 8 fields correct`);
+        grid.appendChild(cell);
+      });
+    });
+  })();
+})();
+</script>
+</body>
+</html>
